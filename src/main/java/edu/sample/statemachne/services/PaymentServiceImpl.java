@@ -10,13 +10,17 @@ import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
+import org.springframework.statemachine.support.StateMachineInterceptor;
 import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
 public class PaymentServiceImpl implements PaymentService {
+    public static final String PAYMENT_ID_HEADER = "PAYMENT_ID_HEADER";
     private final PaymentRepository paymentRepository;
     private final StateMachineFactory<PaymentState, PaymentEvent> stateMachineFactory;
+    private final StateMachineInterceptor<PaymentState, PaymentEvent> paymentStateChangeInterceptor;
+
     @Override
     public Payment newPayment(Payment payment) {
         payment.setState(PaymentState.NEW);
@@ -60,7 +64,10 @@ public class PaymentServiceImpl implements PaymentService {
         StateMachine<PaymentState, PaymentEvent> sm = stateMachineFactory.getStateMachine(Long.toString(payment.getId()));
         sm.stop();
         sm.getStateMachineAccessor()
-                .doWithAllRegions(sma -> sma.resetStateMachine(new DefaultStateMachineContext<>(payment.getState(), null, null, null)));
+                .doWithAllRegions(sma -> {
+                    sma.addStateMachineInterceptor(paymentStateChangeInterceptor);
+                    sma.resetStateMachine(new DefaultStateMachineContext<>(payment.getState(), null, null, null));
+                });
         sm.start();
         return sm;
     }
