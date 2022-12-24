@@ -24,9 +24,11 @@ class StateMachineConfigTest {
         sm.start();
         assertThat("should be in initial state, NEW state", sm.getState().getId(), Matchers.is(PaymentState.NEW));
 
-        sm.sendEvent(PaymentEvent.PRE_AUTHORIZE); // triggers StateMachineConfig.preAuthAction()
-        assertThat("should transition to either PRE_AUTH or PRE_AUTH_ERROR states",
-                sm.getState().getId(), Matchers.oneOf(PaymentState.PRE_AUTH, PaymentState.PRE_AUTH_ERROR));
+        sm.sendEvent(PaymentEvent.PRE_AUTHORIZE); // triggers PreAuthAction
+        assertThat("PRE_AUTHORIZE event should keep the state machine in NEW state",
+                sm.getState().getId(), Matchers.oneOf(PaymentState.NEW));
+
+        sm.sendEvent(PaymentEvent.PRE_AUTH_APPROVED);
 
         if (PaymentState.PRE_AUTH.equals(sm.getState().getId())) {
             sm.sendEvent(PaymentEvent.PRE_AUTH_APPROVED);
