@@ -36,7 +36,20 @@ class PaymentServiceImplTest {
         StateMachine<PaymentState, PaymentEvent> sm = paymentService.preAuth(savedPayment.getId());
         Payment preAuthedPayment = paymentRepository.getOne(savedPayment.getId());
         assertThat(preAuthedPayment, Matchers.is(savedPayment));
-        assertThat(sm.getState().getId(), Matchers.is(PaymentState.PRE_AUTH));
+        assertThat(sm.getState().getId(), Matchers.oneOf(PaymentState.PRE_AUTH, PaymentState.PRE_AUTH_ERROR));
+
+    }
+
+    @Test
+    @Transactional
+    void auth() {
+        payment.setState(PaymentState.PRE_AUTH);
+        Payment preAuthorizedPayment = paymentRepository.save(payment);
+
+        StateMachine<PaymentState, PaymentEvent> sm = paymentService.authorizePayment(preAuthorizedPayment.getId());
+        Payment authorizedPayment = paymentRepository.getOne(preAuthorizedPayment.getId());
+        assertThat(authorizedPayment, Matchers.is(preAuthorizedPayment));
+        assertThat(sm.getState().getId(), Matchers.oneOf(PaymentState.AUTH, PaymentState.AUTH_ERROR));
 
     }
 }
