@@ -6,6 +6,7 @@ import edu.sample.statemachne.domain.PaymentState;
 import edu.sample.statemachne.repository.PaymentRepository;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,6 +32,7 @@ class PaymentServiceImplTest {
 
     @Test
     @Transactional
+    @RepeatedTest(10)
     void preAuth() {
         Payment savedPayment = paymentService.newPayment(payment);
         StateMachine<PaymentState, PaymentEvent> sm = paymentService.preAuth(savedPayment.getId());
@@ -42,6 +44,7 @@ class PaymentServiceImplTest {
 
     @Test
     @Transactional
+    @RepeatedTest(10)
     void auth() {
         payment.setState(PaymentState.PRE_AUTH);
         Payment preAuthorizedPayment = paymentRepository.save(payment);
